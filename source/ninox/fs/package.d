@@ -30,6 +30,24 @@ import std.path : buildPath, buildNormalizedPath, absolutePath;
 import std.file : StdDirEntry = DirEntry;
 import std.stdio : StdIoFile = File;
 
+class NinoxFsException : Exception {
+    this(string msg, Throwable nextInChain = null) pure nothrow @nogc @safe {
+        super(msg, __FILE__, __LINE__, nextInChain);
+    }
+}
+
+class NinoxFsSecurityException : NinoxFsException {
+    this(string msg, Throwable nextInChain = null) pure nothrow @nogc @safe {
+        super(msg, nextInChain);
+    }
+}
+
+class NinoxFsNotFoundException : NinoxFsException {
+    this(string msg, Throwable nextInChain = null) pure nothrow @nogc @safe {
+        super(msg, nextInChain);
+    }
+}
+
 interface File {
     void[] read(int size);
     void close();
@@ -133,7 +151,7 @@ private string buildSecurePath(string base, string path) {
 
     string res = buildNormalizedPath(base, path);
     if (!res.startsWith(base)) {
-        throw new Exception("Security exception: cannot access parent path from sub-filesystem!");
+        throw new NinoxFsSecurityException("cannot access parent path from sub-filesystem!");
     }
 
     return res;
@@ -197,21 +215,30 @@ class FolderFs : FS {
         return new ByteArrayFile(this.readFile(name));
     }
 
+    private string buildPath(string name) {
+        auto ret = buildSecurePath(this.path, name);
+        import std.file : exists;
+        if (!exists(ret)) {
+            throw new NinoxFsNotFoundException("Could not find file or directory " ~ ret);
+        }
+        return ret;
+    }
+
     DirEntry[] readDir(string name) {
         import std.file : dirEntries, SpanMode;
         import std.algorithm : map;
         import std.array : array;
-        auto entries = dirEntries(buildSecurePath(this.path, name), SpanMode.shallow);
+        auto entries = dirEntries(this.buildPath(name), SpanMode.shallow);
         return entries.map!( (e) => DirEntry(e) ).array;
     }
 
     void[] readFile(string name) {
         import std.file : read;
-        return read(buildSecurePath(this.path, name));
+        return read(this.buildPath(name));
     }
 
     FS sub(string dir) {
-        return new FolderFs(buildSecurePath(this.path, dir));
+        return new FolderFs(this.buildPath(dir));
     }
 }
 
@@ -255,7 +282,7 @@ class EmbeddedFs : FS {
 
     private void checkExistence(string name) {
         if (!this.exists(name)) {
-            throw new Exception("Could not find file or directory in EmbeddedFs");
+            throw new NinoxFsNotFoundException("Could not find file or directory " ~ name);
         }
     }
 

@@ -1,0 +1,24 @@
+{
+	"authors": [
+		"Mai-Lapyst"
+	],
+	"copyright": "Copyright © 2023, Mai-Lapyst",
+	"description": "A abstraction for fs operations that also supports embedding",
+	"license": "AGPL-3.0-or-later",
+	"name": "ninox-d_fs",
+	"configurations": [
+		{
+			"name": "application",
+			"targetType": "executable",
+			"mainSourceFile": "source/ninox/fs/main.d",
+			"dependencies": {
+				"d-glob": "~>0.4.0"
+			}
+		},
+		{
+			"name": "library",
+			"targetType": "library",
+			"excludedSourceFiles": ["source/ninox/fs/main.d"]
+		}
+	]
+}

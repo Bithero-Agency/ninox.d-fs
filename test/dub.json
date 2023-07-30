@@ -1,0 +1,21 @@
+{
+	"authors": [
+		"Mai-Lapyst"
+	],
+	"copyright": "Copyright © 2023, Mai-Lapyst",
+	"description": "A minimal D application.",
+	"license": "AGPL-3.0-or-later",
+	"name": "test",
+	"targetType": "executable",
+	"stringImportPaths": [
+		"."
+	],
+	"dependencies": {
+		"ninox-d_fs": {
+			"path": ".."
+		}
+	},
+	"preGenerateCommands": [
+		"bash ../helper.sh test"
+	]
+}

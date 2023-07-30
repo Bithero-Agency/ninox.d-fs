@@ -128,6 +128,17 @@ DirEntry toNinoxDirEntry(StdDirEntry e) {
     return DirEntry(e);
 }
 
+private string buildSecurePath(string base, string path) {
+    import std.string : startsWith;
+
+    string res = buildNormalizedPath(base, path);
+    if (!res.startsWith(base)) {
+        throw new Exception("Security exception: cannot access parent path from sub-filesystem!");
+    }
+
+    return res;
+}
+
 interface FS {
     File open(string name);
     DirEntry[] readDir(string name);
@@ -153,19 +164,19 @@ class SubFS : FS {
     }
 
     File open(string name) {
-        return this.root.open(buildPath(this.path, name));
+        return this.root.open(buildSecurePath(this.path, name));
     }
 
     DirEntry[] readDir(string name) {
-        return this.root.readDir(buildPath(this.path, name));
+        return this.root.readDir(buildSecurePath(this.path, name));
     }
 
     void[] readFile(string name) {
-        return this.root.readFile(buildPath(this.path, name));
+        return this.root.readFile(buildSecurePath(this.path, name));
     }
 
     FS sub(string dir) {
-        return new SubFS(this.root, buildPath(this.path, dir));
+        return new SubFS(this.root, buildSecurePath(this.path, dir));
     }
 }
 
@@ -190,17 +201,17 @@ class FolderFs : FS {
         import std.file : dirEntries, SpanMode;
         import std.algorithm : map;
         import std.array : array;
-        auto entries = dirEntries(buildNormalizedPath(this.path, name), SpanMode.shallow);
+        auto entries = dirEntries(buildSecurePath(this.path, name), SpanMode.shallow);
         return entries.map!( (e) => DirEntry(e) ).array;
     }
 
     void[] readFile(string name) {
         import std.file : read;
-        return read(buildPath(this.path, name));
+        return read(buildSecurePath(this.path, name));
     }
 
     FS sub(string dir) {
-        return new FolderFs(buildPath(this.path, dir));
+        return new FolderFs(buildSecurePath(this.path, dir));
     }
 }
 

@@ -48,10 +48,30 @@ void testEmbeddFs2() {
 	f.close();
 }
 
+void testLayerFs() {
+	auto fs1 = new EmbeddedFs([
+		"/test.txt": EmbeddedFsEntry("Content of test in fs1", FileKind.File),
+		"/1.txt": EmbeddedFsEntry("fs1 exclusive", FileKind.File),
+	]);
+
+	auto fs2 = new EmbeddedFs([
+		"/test.txt": EmbeddedFsEntry("Content of test in fs2", FileKind.File),
+		"/2.txt": EmbeddedFsEntry("fs2 exclusive", FileKind.File),
+	]);
+
+	auto layerFs = new LayeredFs(fs1, fs2);
+
+	writeln(cast(string) layerFs.readFile("/test.txt"));
+	writeln(cast(string) layerFs.readFile("/1.txt"));
+	writeln(cast(string) layerFs.readFile("/2.txt"));
+}
+
 void main() {
 	testOsFs();
 	writeln("-------------------------------------");
 	testEmbeddFs();
 	writeln("-------------------------------------");
 	testEmbeddFs2();
+	writeln("-------------------------------------");
+	testLayerFs();
 }

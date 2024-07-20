@@ -453,3 +453,66 @@ class EmbeddedFs : FS {
     }
 
 }
+
+/// A layered filesystem that delegates calls to different other filesystems
+class LayeredFs : FS {
+
+    private {
+        FS[] layers;
+    }
+
+    this(FS[] layers...) {
+        this.layers = layers;
+    }
+
+    private template rethrowLayerException() {
+        enum rethrowLayerException = `
+            import std.conv : to;
+            throw new NinoxFsException("Layer " ~ typeid(cast(Object) layer).to!string ~ " threw exception", th);
+        `;
+    }
+
+    File open(string name) {
+        foreach (ref layer; this.layers) {
+            try {
+                return layer.open(name);
+            } catch (NinoxFsNotFoundException e) {
+                continue;
+            } catch (Throwable th) {
+                mixin(rethrowLayerException!());
+            }
+        }
+        throw new NinoxFsNotFoundException("Could not find file or directory " ~ name);
+    }
+
+    DirEntry[] readDir(string name) {
+        foreach (ref layer; this.layers) {
+            try {
+                return layer.readDir(name);
+            } catch (NinoxFsNotFoundException e) {
+                continue;
+            } catch (Throwable th) {
+                mixin(rethrowLayerException!());
+            }
+        }
+        throw new NinoxFsNotFoundException("Could not find file or directory " ~ name);
+    }
+
+    void[] readFile(string name) {
+        foreach (ref layer; this.layers) {
+            try {
+                return layer.readFile(name);
+            } catch (NinoxFsNotFoundException e) {
+                continue;
+            } catch (Throwable th) {
+                mixin(rethrowLayerException!());
+            }
+        }
+        throw new NinoxFsNotFoundException("Could not find file or directory " ~ name);
+    }
+
+    FS sub(string dir) {
+        return new SubFS(this, dir);
+    }
+
+}

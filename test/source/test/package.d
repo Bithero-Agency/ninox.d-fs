@@ -66,6 +66,24 @@ void testLayerFs() {
 	writeln(cast(string) layerFs.readFile("/2.txt"));
 }
 
+void testFsWalk() {
+	import ninox.fs.walk;
+
+	auto fs = new EmbeddedFs([
+		"/test.txt": EmbeddedFsEntry("a", FileKind.File),
+		"/folder": EmbeddedFsEntry(FileKind.Dir),
+		"/folder/a.txt": EmbeddedFsEntry("c", FileKind.File),
+		"/test1.txt": EmbeddedFsEntry("b", FileKind.File),
+	]);
+
+	fs.walk(".", (FS fs, ref DirEntry entry) {
+		import std.stdio;
+		writeln("-> ", entry.name);
+		return WalkAction.Continue;
+	});
+
+}
+
 void main() {
 	testOsFs();
 	writeln("-------------------------------------");
@@ -74,4 +92,6 @@ void main() {
 	testEmbeddFs2();
 	writeln("-------------------------------------");
 	testLayerFs();
+	writeln("-------------------------------------");
+	testFsWalk();
 }

@@ -19,7 +19,11 @@
 		{
 			"name": "library",
 			"targetType": "library",
-			"excludedSourceFiles": ["source/ninox/fs/main.d"]
+			"excludedSourceFiles": ["source/ninox/fs/main.d"],
+			"dependencies": {
+				"ninox-d_std:callable": "~>1.7.2",
+				"ninox-d_std:traits": "~>1.7.2"
+			}
 		}
 	]
 }

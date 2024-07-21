@@ -94,6 +94,13 @@ import ninox.fs;
             code ~= "shared static this() {\n";
             code ~= "    " ~ match[1] ~ " = new EmbeddedFs([\n";
 
+            struct Entry {
+                string file;
+                string fpath;
+                string ipath;
+            }
+            Entry[] paths;
+
             // go through the specs and build the entries for the embeded filesystem
             foreach (spec; specs) {
                 string base = "";
@@ -119,9 +126,26 @@ import ninox.fs;
                 foreach (file; glob(spec)) {
                     string fpath = "/" ~ relativePath(file, base);
                     string ipath = relativePath(file, root_dir);
+                    paths ~= Entry(file, fpath, ipath);
+                }
+            }
 
-                    writeln("Info ninox.d-fs:    include: ", file, " as: ", fpath);
-                    code ~= "        \"" ~ fpath ~ "\": EmbeddedFsEntry(import(\"" ~ ipath ~ "\"), FileKind.File),\n";
+            // sort the filepaths and de-duplicate
+            import std.algorithm : sort, uniq;
+            foreach (ref e; paths.sort!("a.fpath < b.fpath").uniq!("a.fpath == b.fpath")) {
+                import std.file : isDir, isFile, isSymlink;
+                writeln("Info ninox.d-fs:    include: ", e.file, " as: ", e.fpath);
+                if (e.file.isDir) {
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(FileKind.Dir),\n";
+                }
+                else if (e.file.isFile) {
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(import(\"" ~ e.ipath ~ "\"), FileKind.File),\n";
+                }
+                else if (e.file.isSymlink) {
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(FileKind.SymLink),\n";
+                }
+                else {
+                    throw new Exception("Unknown kind of file: " ~ e.file);
                 }
             }
 

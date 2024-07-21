@@ -390,6 +390,12 @@ struct EmbeddedFsEntry {
     FileKind kind;
     ulong size;
 
+    this(FileKind kind) {
+        this.content = null;
+        this.kind = kind;
+        this.size = -1;
+    }
+
     this(string content, FileKind kind) {
         this.content = cast(void[]) content;
         this.kind = kind;

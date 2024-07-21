@@ -30,6 +30,7 @@ import std.path : buildPath, buildNormalizedPath, absolutePath, relativePath;
 import std.file : StdDirEntry = DirEntry;
 import std.stdio : StdIoFile = File;
 
+public import ninox.fs.folder;
 public import ninox.fs.layered;
 
 /// Baseclass for all exceptions of this package
@@ -114,7 +115,7 @@ enum FileKind {
 
 /// Datastructure to represent the entry in an directory
 struct DirEntry {
-    private {
+    package(ninox.fs) {
         string _name;
         FileKind _kind = FileKind.Unknown;
         ulong _size = 0;
@@ -233,7 +234,7 @@ DirEntry toNinoxDirEntry(StdDirEntry e) {
  * 
  * Throws: NinoxFsSecurityException when the resulting path doesnt resides inside the base directory
  */
-private string buildSecurePath(string base, string path) {
+package(ninox.fs) string buildSecurePath(string base, string path) {
     import std.string : startsWith;
 
     string res = buildNormalizedPath(base, path);
@@ -322,68 +323,6 @@ class SubFS : FS {
     FS sub(string dir) {
         return new SubFS(this.root, buildSecurePath(this.path, dir));
     }
-}
-
-/// Filesystem onto a folder of the underlaying operating system.
-class FolderFs : FS {
-    private {
-        string path;
-    }
-
-    this(string path) {
-        import std.file : isDir;
-        this.path = buildNormalizedPath(absolutePath(path));
-        if (!this.path.isDir) {
-            throw new Exception("Cannot create a FolderFS for a non-existing directory!");
-        }
-    }
-
-    File open(string name) {
-        return new ByteArrayFile(this.readFile(name));
-    }
-
-    private string buildPath(string name) {
-        auto ret = buildSecurePath(this.path, name);
-        import std.file : exists;
-        if (!exists(ret)) {
-            throw new NinoxFsNotFoundException("Could not find file or directory " ~ ret);
-        }
-        return ret;
-    }
-
-    DirEntry[] readDir(string name) {
-        import std.file : dirEntries, SpanMode;
-        import std.algorithm : map;
-        import std.array : array;
-        auto path = this.buildPath(name);
-        auto entries = dirEntries(path, SpanMode.shallow, false);
-        return entries.map!((e) {
-            auto r = DirEntry(e);
-            r._name = relativePath(r._name, path);
-            return r;
-        }).array;
-    }
-
-    void[] readFile(string name) {
-        import std.file : read;
-        return read(this.buildPath(name));
-    }
-
-    FS sub(string dir) {
-        return new FolderFs(this.buildPath(dir));
-    }
-}
-
-/**
- * Gets a instance of the OS filesystem.
- * 
- * Params:
- *   path = the path of the os filesystem to request
- * 
- * Returns: a instance of ninox.fs.FolderFs for the path requested
- */
-FolderFs getOsFs(string path = ".") {
-    return new FolderFs(path);
 }
 
 /// Entry holding informations for a file of a embedded filesystem

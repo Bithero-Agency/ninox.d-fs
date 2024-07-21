@@ -30,6 +30,7 @@ import std.path : buildPath, buildNormalizedPath, absolutePath, relativePath;
 import std.file : StdDirEntry = DirEntry;
 import std.stdio : StdIoFile = File;
 
+public import ninox.fs.embedded;
 public import ninox.fs.folder;
 public import ninox.fs.layered;
 public import ninox.fs.sub;
@@ -288,85 +289,4 @@ interface FS {
      * Returns: the sub-filesystem created
      */
     FS sub(string dir);
-}
-
-/// Entry holding informations for a file of a embedded filesystem
-struct EmbeddedFsEntry {
-    void[] content;
-    FileKind kind;
-    ulong size;
-
-    this(FileKind kind) {
-        this.content = null;
-        this.kind = kind;
-        this.size = -1;
-    }
-
-    this(string content, FileKind kind) {
-        this.content = cast(void[]) content;
-        this.kind = kind;
-        this.size = this.content.length;
-    }
-
-    File open() {
-        return new ByteArrayFile(this.content);
-    }
-
-    void[] readFile() {
-        return content;
-    }
-}
-
-/// A filesystem that is embedded into the executable
-class EmbeddedFs : FS {
-
-    private {
-        EmbeddedFsEntry[string] entries;
-    }
-
-    this(EmbeddedFsEntry[string] entries) {
-        this.entries = entries;
-    }
-
-    private bool exists(string name) {
-        return (name in this.entries) !is null;
-    }
-
-    private void checkExistence(string name) {
-        if (!this.exists(name)) {
-            throw new NinoxFsNotFoundException("Could not find file or directory " ~ name);
-        }
-    }
-
-    File open(string name) {
-        name = buildNormalizedPath("/", name);
-        this.checkExistence(name);
-        return this.entries[name].open();
-    }
-
-    DirEntry[] readDir(string name) {
-        DirEntry[] res;
-
-        name = buildNormalizedPath("/", name);
-
-        foreach (key, val; this.entries) {
-            import std.path : dirName, baseName;
-            if (key.dirName == name) {
-                res ~= DirEntry(key.baseName, val.kind, val.size);
-            }
-        }
-
-        return res;
-    }
-
-    void[] readFile(string name) {
-        name = buildNormalizedPath("/", name);
-        this.checkExistence(name);
-        return this.entries[name].readFile();
-    }
-
-    FS sub(string dir) {
-        return new SubFS(this, dir);
-    }
-
 }

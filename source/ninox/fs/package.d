@@ -32,6 +32,7 @@ import std.stdio : StdIoFile = File;
 
 public import ninox.fs.folder;
 public import ninox.fs.layered;
+public import ninox.fs.sub;
 
 /// Baseclass for all exceptions of this package
 class NinoxFsException : Exception {
@@ -287,42 +288,6 @@ interface FS {
      * Returns: the sub-filesystem created
      */
     FS sub(string dir);
-}
-
-/// A generic filesystem class for implementing sub-filesystems
-/// by wrapping a root filesystem and delegating all requests to them prepended with a path.
-class SubFS : FS {
-    private {
-        FS root;
-        string path;
-    }
-
-    this(FS root, string path) {
-        this.root = root;
-        this.path = path;
-
-        auto root_as_subfs = cast(SubFS) this.root;
-        if (root_as_subfs !is null) {
-            this.root = root_as_subfs.root;
-            this.path = buildPath(root_as_subfs.path, this.path);
-        }
-    }
-
-    File open(string name) {
-        return this.root.open(buildSecurePath(this.path, name));
-    }
-
-    DirEntry[] readDir(string name) {
-        return this.root.readDir(buildSecurePath(this.path, name));
-    }
-
-    void[] readFile(string name) {
-        return this.root.readFile(buildSecurePath(this.path, name));
-    }
-
-    FS sub(string dir) {
-        return new SubFS(this.root, buildSecurePath(this.path, dir));
-    }
 }
 
 /// Entry holding informations for a file of a embedded filesystem

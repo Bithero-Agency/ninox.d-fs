@@ -444,9 +444,9 @@ class EmbeddedFs : FS {
         name = buildNormalizedPath("/", name);
 
         foreach (key, val; this.entries) {
-            import std.string : startsWith;
-            if (key.startsWith(name)) {
-                res ~= DirEntry(key, val.kind, val.size);
+            import std.path : dirName, baseName;
+            if (key.dirName == name) {
+                res ~= DirEntry(key.baseName, val.kind, val.size);
             }
         }
 

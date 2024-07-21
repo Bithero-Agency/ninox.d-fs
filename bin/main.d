@@ -134,13 +134,13 @@ import ninox.fs;
                 import std.file : isDir, isFile, isSymlink;
                 writeln("Info ninox.d-fs:    include: ", e.file, " as: ", e.fpath);
                 if (e.file.isDir) {
-                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(FileKind.Dir),\n";
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFs.Entry(FileKind.Dir),\n";
                 }
                 else if (e.file.isFile) {
-                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(import(\"" ~ e.ipath ~ "\"), FileKind.File),\n";
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFs.Entry(import(\"" ~ e.ipath ~ "\"), FileKind.File),\n";
                 }
                 else if (e.file.isSymlink) {
-                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFsEntry(FileKind.SymLink),\n";
+                    code ~= "        \"" ~ e.fpath ~ "\": EmbeddedFs.Entry(FileKind.SymLink),\n";
                 }
                 else {
                     throw new Exception("Unknown kind of file: " ~ e.file);

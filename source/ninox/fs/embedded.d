@@ -28,41 +28,43 @@ import ninox.fs;
 
 import std.path : buildNormalizedPath;
 
-/// Entry holding informations for a file of a embedded filesystem
-struct EmbeddedFsEntry {
-    void[] content;
-    FileKind kind;
-    ulong size;
-
-    this(FileKind kind) {
-        this.content = null;
-        this.kind = kind;
-        this.size = -1;
-    }
-
-    this(string content, FileKind kind) {
-        this.content = cast(void[]) content;
-        this.kind = kind;
-        this.size = this.content.length;
-    }
-
-    File open() {
-        return new ByteArrayFile(this.content);
-    }
-
-    void[] readFile() {
-        return content;
-    }
-}
+deprecated("Use EmbeddedFs.Entry instead")
+alias EmbeddedFsEntry = EmbeddedFs.Entry;
 
 /// A filesystem that is embedded into the executable
 class EmbeddedFs : FS {
+    /// Entry holding informations for a file of a embedded filesystem
+    struct Entry {
+        void[] content;
+        FileKind kind;
+        ulong size;
 
-    private {
-        EmbeddedFsEntry[string] entries;
+        this(FileKind kind) {
+            this.content = null;
+            this.kind = kind;
+            this.size = -1;
+        }
+
+        this(string content, FileKind kind) {
+            this.content = cast(void[]) content;
+            this.kind = kind;
+            this.size = this.content.length;
+        }
+
+        File open() {
+            return new ByteArrayFile(this.content);
+        }
+
+        void[] readFile() {
+            return content;
+        }
     }
 
-    this(EmbeddedFsEntry[string] entries) {
+    private {
+        Entry[string] entries;
+    }
+
+    this(Entry[string] entries) {
         this.entries = entries;
     }
 

@@ -19,7 +19,7 @@ void testOsFs() {
 
 void testEmbeddFs() {
 	auto fs = new EmbeddedFs([
-		"/test.txt": EmbeddedFsEntry(import("./test.txt"), FileKind.File),
+		"/test.txt": EmbeddedFs.Entry(import("./test.txt"), FileKind.File),
 	]);
 
 	auto e = fs.readDir(".");
@@ -50,13 +50,13 @@ void testEmbeddFs2() {
 
 void testLayerFs() {
 	auto fs1 = new EmbeddedFs([
-		"/test.txt": EmbeddedFsEntry("Content of test in fs1", FileKind.File),
-		"/1.txt": EmbeddedFsEntry("fs1 exclusive", FileKind.File),
+		"/test.txt": EmbeddedFs.Entry("Content of test in fs1", FileKind.File),
+		"/1.txt": EmbeddedFs.Entry("fs1 exclusive", FileKind.File),
 	]);
 
 	auto fs2 = new EmbeddedFs([
-		"/test.txt": EmbeddedFsEntry("Content of test in fs2", FileKind.File),
-		"/2.txt": EmbeddedFsEntry("fs2 exclusive", FileKind.File),
+		"/test.txt": EmbeddedFs.Entry("Content of test in fs2", FileKind.File),
+		"/2.txt": EmbeddedFs.Entry("fs2 exclusive", FileKind.File),
 	]);
 
 	auto layerFs = new LayeredFs(fs1, fs2);
@@ -70,10 +70,10 @@ void testFsWalk() {
 	import ninox.fs.walk;
 
 	auto fs = new EmbeddedFs([
-		"/test.txt": EmbeddedFsEntry("a", FileKind.File),
-		"/folder": EmbeddedFsEntry(FileKind.Dir),
-		"/folder/a.txt": EmbeddedFsEntry("c", FileKind.File),
-		"/test1.txt": EmbeddedFsEntry("b", FileKind.File),
+		"/test.txt": EmbeddedFs.Entry("a", FileKind.File),
+		"/folder": EmbeddedFs.Entry(FileKind.Dir),
+		"/folder/a.txt": EmbeddedFs.Entry("c", FileKind.File),
+		"/test1.txt": EmbeddedFs.Entry("b", FileKind.File),
 	]);
 
 	fs.walk(".", (FS fs, ref DirEntry entry) {

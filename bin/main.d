@@ -1,5 +1,3 @@
-module ninox.fs.main;
-
 import std.stdio;
 import std.getopt;
 import std.process : environment;

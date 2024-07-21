@@ -26,7 +26,7 @@
 module ninox.fs;
 
 // import std.datetime.date;
-import std.path : buildPath, buildNormalizedPath, absolutePath;
+import std.path : buildPath, buildNormalizedPath, absolutePath, relativePath;
 import std.file : StdDirEntry = DirEntry;
 import std.stdio : StdIoFile = File;
 
@@ -353,8 +353,13 @@ class FolderFs : FS {
         import std.file : dirEntries, SpanMode;
         import std.algorithm : map;
         import std.array : array;
-        auto entries = dirEntries(this.buildPath(name), SpanMode.shallow);
-        return entries.map!( (e) => DirEntry(e) ).array;
+        auto path = this.buildPath(name);
+        auto entries = dirEntries(path, SpanMode.shallow, false);
+        return entries.map!((e) {
+            auto r = DirEntry(e);
+            r._name = relativePath(r._name, path);
+            return r;
+        }).array;
     }
 
     void[] readFile(string name) {
